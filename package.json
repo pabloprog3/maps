@@ -32,7 +32,6 @@
     "cordova-android": "^7.0.0",
     "cordova-browser": "5.0.4",
     "cordova-plugin-device": "^2.0.2",
-    "cordova-plugin-firebasex": "^6.1.0",
     "cordova-plugin-geolocation": "^4.0.2",
     "cordova-plugin-googlemaps": "git+https://github.com/mapsplugin/cordova-plugin-googlemaps.git#multiple_maps",
     "cordova-plugin-ionic-keyboard": "^2.2.0",
@@ -84,8 +83,7 @@
         "ANDROID_SUPPORT_ANNOTATIONS_VERSION": "27.+"
       },
       "cordova-plugin-ionic-keyboard": {},
-      "cordova-plugin-googlemaps": {},
-      "cordova-plugin-firebasex": {}
+      "cordova-plugin-googlemaps": {}
     },
     "platforms": [
       "browser",

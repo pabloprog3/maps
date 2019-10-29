@@ -27,6 +27,7 @@ export class HomePage implements OnInit {
   ngOnInit(): void {
     this.servicioMapa.getListadoCanchas().valueChanges().subscribe(lista=>{
       lista.forEach(cancha => {
+        console.log(cancha);  
         let _markerOpts:MarkerOptions={
           title:cancha.direccion,
           position: {lat: cancha.latitud, lng:cancha.longitud}

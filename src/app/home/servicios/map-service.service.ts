@@ -16,7 +16,7 @@ export class MapServiceService {
 
   public getListadoCanchas(): AngularFireList<any>{
     this.listaCanchas = this.db.list('canchas');
-    console.log(this.listaCanchas);
+    console.info(this.listaCanchas);
     return this.listaCanchas;
   }
 
