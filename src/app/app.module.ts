@@ -10,7 +10,7 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 
 import { Geolocation } from "@ionic-native/geolocation/ngx";
-import { GoogleMaps } from "@ionic-native/google-maps/ngx";
+import { GoogleMaps, Marker } from "@ionic-native/google-maps/ngx";
 
 import { environment } from "../environments/environment";
 import { AngularFireModule } from "angularfire2";

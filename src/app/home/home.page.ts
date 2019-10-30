@@ -2,15 +2,24 @@ import { Component, OnInit } from '@angular/core';
 
 import { GoogleMap, 
          GoogleMaps, 
-         Marker, 
+         Marker,
          GoogleMapOptions,
+         PolylineOptions,
+         LatLng,
+         Spherical,
+         GoogleMapsMapTypeId,
          Environment,
          GoogleMapControlOptions,
          GoogleMapsAnimation,
-         MarkerOptions} from "@ionic-native/google-maps/ngx";
+         MarkerOptions,
+         GoogleMapsEvent,
+         ILatLng,
+         StreetViewPanorama,
+         Polyline} from "@ionic-native/google-maps/ngx";
 
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { MapServiceService } from './servicios/map-service.service';
+import { Platform } from '@ionic/angular';
 
 
 @Component({
@@ -21,42 +30,57 @@ import { MapServiceService } from './servicios/map-service.service';
 export class HomePage implements OnInit {
 
   public map:GoogleMap;
+  private miLatitud:number;
+  private miLongitud:number;
+  private distancia:string;
 
-  constructor(private geo:Geolocation, private servicioMapa: MapServiceService) {}
+  constructor(private geo:Geolocation, private servicioMapa: MapServiceService,
+              private platform:Platform  
+  ) {
+    this.distancia = '0';
+  }
 
   ngOnInit(): void {
-    this.servicioMapa.getListadoCanchas().valueChanges().subscribe(lista=>{
-      lista.forEach(cancha => {
-        console.log(cancha);  
-        let _markerOpts:MarkerOptions={
-          title:cancha.direccion,
-          position: {lat: cancha.latitud, lng:cancha.longitud}
-        };
-        this.map.addMarker(_markerOpts);
-      });
-    });
-    //obtengo la posicion actual del dispositivo: se almacena en la variable "geopos"
+
+    if (this.platform.ready().then(value=>{
+      console.log(value);
+              //obtengo la posicion actual del dispositivo: se almacena en la variable "geopos"
     this.geo.getCurrentPosition().then(geopos=>{
-      console.log(geopos);
-      //declaro variables locales con let y asigno latitud y longitud:
-      let lat = geopos.coords.latitude;
-      let long = geopos.coords.longitude;
-      //cargo el mapa:
-      this.cargarMapa(lat, long);
+        //declaro variables locales con let y asigno latitud y longitud:
+        this.miLatitud = geopos.coords.latitude;
+        this.miLongitud = geopos.coords.longitude;
+        //cargo el mapa:
+        this.cargarMapa(this.miLatitud, this.miLongitud);    
     }).catch(error=>{
       console.log('Error al obtener coordenadas: ', error);
     });
     
-    //this.cargarMapa();
+ 
+    this.servicioMapa.getListadoCanchas().valueChanges().subscribe(lista=>{
+      lista.forEach(cancha => {
+        //console.log(cancha);  
+        let _markerOpts:MarkerOptions={
+          title: "Nombre: " + cancha.direccion,
+          position: {lat: cancha.latitud, lng:cancha.longitud},
+        };
+  
+          this.map.addMarker(_markerOpts).then((_marker:Marker)=>{
+            //agrego el evento "click" al marcador recién agregado al mapa
+            //cuando presiono la posicion, traza la ruta
+            _marker.addEventListener(GoogleMapsEvent.MARKER_CLICK).subscribe((markerClicked)=>{
+              //this.map.setMapTypeId(GoogleMapsMapTypeId.SATELLITE);
+                let objLatLng: LatLng= markerClicked[0];
+                this.trazarRuta(objLatLng.lat, objLatLng.lng, this.miLatitud, this.miLongitud);
+            });
+          });
+        
+      });
+    });
+    })) {}
   }
 
 
-  private cargarMapa(_lat: number, _lng: number):void{
-    console.log(_lat, '; ', _lng);
-    Environment.setEnv({
-      'API_KEY_FOR_BROWSER_RELEASE': 'AIzaSyCvpmyDG-x0iiI-DSiv9mFJnAik4K8_DJY',
-      'API_KEY_FOR_BROWSER_DEBUG': 'AIzaSyCvpmyDG-x0iiI-DSiv9mFJnAik4K8_DJY'
-    });
+  private cargarMapa(_lat, _lng){
     //configuración inicial del mapa
     // documentación: https://github.com/ionic-team/ionic-native-google-maps/blob/master/documents/README.md
     const mapOptios:GoogleMapOptions = {
@@ -72,6 +96,7 @@ export class HomePage implements OnInit {
 
     //creo el mapa
     this.map = GoogleMaps.create('mapa', mapOptios);
+
     let markerOpts: MarkerOptions = {
       icon: {
         url: '../assets/icon/marker_usuario.jpg',
@@ -85,6 +110,46 @@ export class HomePage implements OnInit {
       animation: GoogleMapsAnimation.DROP
     }
     this.map.addMarker(markerOpts);
+ 
+  }
+
+
+  private trazarRuta(lat, long, miLat, miLng) {
+
+    const promise = new Promise((resolve, reject) => {
+        let miPos:ILatLng={
+      lat:miLat,
+      lng:miLng,
+    }
+    let posMarkerClicked:ILatLng={
+      lat:lat,
+      lng:long
+    }
+    let lineOptions: PolylineOptions = {
+        points: [miPos, posMarkerClicked],
+        visible: true,
+        color: '#FF8100',
+        width: 4,
+        clickable: true,
+    };
+
+      this.map.addPolyline(lineOptions).then((polyline:Polyline)=>{
+        console.info(polyline);
+        //retorna la distancia en metros
+        let _distancia = Spherical.computeDistanceBetween(miPos, posMarkerClicked);
+        //redondeo
+        _distancia = Math.round(_distancia);
+        if (_distancia >= 1000) {
+          //convierto a kms
+           let km:number = Math.floor(_distancia / 1000);
+           this.distancia = km + 'Kms.';
+        }else{
+            this.distancia = _distancia + 'Mts.';
+        }
+      });
+    });
+  
+    
   }
 
 }
