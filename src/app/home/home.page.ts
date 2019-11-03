@@ -84,6 +84,7 @@ export class HomePage implements OnInit {
     //configuración inicial del mapa
     // documentación: https://github.com/ionic-team/ionic-native-google-maps/blob/master/documents/README.md
     const mapOptios:GoogleMapOptions = {
+      mapType: GoogleMapsMapTypeId.ROADMAP,
       camera: {
         target:{
           lat: _lat,
