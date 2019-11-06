@@ -44,7 +44,8 @@
     "firebase": "^7.2.0",
     "rxjs": "~6.5.1",
     "tslib": "^1.9.0",
-    "zone.js": "~0.9.1"
+    "zone.js": "~0.9.1",
+    "cordova-plugin-firebasex": "^6.1.0"
   },
   "devDependencies": {
     "@angular-devkit/architect": "~0.801.2",
@@ -84,11 +85,12 @@
         "ANDROID_SUPPORT_ANNOTATIONS_VERSION": "27.+"
       },
       "cordova-plugin-ionic-keyboard": {},
-      "cordova-plugin-googlemaps": {}
+      "cordova-plugin-googlemaps": {},
+      "cordova-plugin-firebasex": {}
     },
     "platforms": [
-      "browser",
-      "android"
+      "android",
+      "browser"
     ]
   }
 }

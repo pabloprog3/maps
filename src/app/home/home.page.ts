@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterContentInit, ElementRef } from '@angular/core';
 
 import { GoogleMap, 
          GoogleMaps, 
@@ -21,6 +21,7 @@ import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { MapServiceService } from './servicios/map-service.service';
 import { Platform } from '@ionic/angular';
 
+declare var google:any;
 
 @Component({
   selector: 'app-home',
@@ -28,129 +29,95 @@ import { Platform } from '@ionic/angular';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
-
+  @ViewChild("mapa", { read:ElementRef, static:false }) private mapaHTML:ElementRef;
   public map:GoogleMap;
   private miLatitud:number;
   private miLongitud:number;
   private distancia:string;
+  public mapElement: ElementRef = this.mapaHTML;
+  //public mapa:any;
+  
 
-  constructor(private geo:Geolocation, private servicioMapa: MapServiceService,
-              private platform:Platform  
+  constructor(private geo:Geolocation, private servicioMapa: MapServiceService
   ) {
     this.distancia = '0';
   }
 
+  ngAfterViewInit(): void {
+     
+  }
+
   ngOnInit(): void {
 
-    if (this.platform.ready().then(value=>{
-      console.log(value);
-              //obtengo la posicion actual del dispositivo: se almacena en la variable "geopos"
-    this.geo.getCurrentPosition().then(geopos=>{
-        //declaro variables locales con let y asigno latitud y longitud:
-        this.miLatitud = geopos.coords.latitude;
-        this.miLongitud = geopos.coords.longitude;
-        //cargo el mapa:
-        this.cargarMapa(this.miLatitud, this.miLongitud);    
-    }).catch(error=>{
-      console.log('Error al obtener coordenadas: ', error);
-    });
+     //obtengo la posicion actual del dispositivo: se almacena en la variable "geopos"
+     this.geo.getCurrentPosition().then(geopos=>{
+      //declaro variables locales con let y asigno latitud y longitud:
+      this.miLatitud = geopos.coords.latitude;
+      this.miLongitud = geopos.coords.longitude;
+      //cargo el mapa:
+      this.cargarMapa(this.miLatitud, this.miLongitud);
+      console.log(this.map);
+      //traigo la lista de canchas desde Firebase
+      this.servicioMapa.getListadoCanchas().valueChanges().subscribe(lista=>{
+        lista.forEach(cancha => {
+         
+          let _marker = new google.maps.Marker({
+            position: new google.maps.LatLng(cancha.latitud,cancha.longitud),
+            map:this.map,
+            title: 'Dirección: ' + cancha.direccion,
+            animation: google.maps.Animation.DROP,
+            draggable: false
+          });
+          let miLat = geopos.coords.latitude;
+          let miLng = geopos.coords.longitude;
+          let _lat:number = _marker.getPosition().lat();
+          let _lng:number = _marker.getPosition().lng();
+          _marker.addListener('click', function(){
+            let directionService = new google.maps.DirectionsService();
+            let directionsRenderer = new google.maps.DirectionsRenderer();
     
- 
-    this.servicioMapa.getListadoCanchas().valueChanges().subscribe(lista=>{
-      lista.forEach(cancha => {
-        //console.log(cancha);  
-        let _markerOpts:MarkerOptions={
-          title: "Nombre: " + cancha.direccion,
-          position: {lat: cancha.latitud, lng:cancha.longitud},
-        };
-  
-          this.map.addMarker(_markerOpts).then((_marker:Marker)=>{
-            //agrego el evento "click" al marcador recién agregado al mapa
-            //cuando presiono la posicion, traza la ruta
-            _marker.addEventListener(GoogleMapsEvent.MARKER_CLICK).subscribe((markerClicked)=>{
-              //this.map.setMapTypeId(GoogleMapsMapTypeId.SATELLITE);
-                let objLatLng: LatLng= markerClicked[0];
-                this.trazarRuta(objLatLng.lat, objLatLng.lng, this.miLatitud, this.miLongitud);
+            let miLatLng = new google.maps.LatLng(miLat, miLng);
+            let makerLatLng = new google.maps.LatLng(_lat, _lng);
+            directionsRenderer.setMap(this.map);
+      
+            let rutaConfig = {
+              origin: makerLatLng,
+              destination: miLatLng,
+              travelMode: google.maps.TravelMode.WALKING,
+            }
+        
+            directionService.route(rutaConfig, function(result, status){
+              console.log(result);
+              console.log(status);
+              //verifico si la peticion fue resuelta con éxito y si lo fue entonces traza la ruta
+              if (status == 'OK') {
+                directionsRenderer.setDirections(result);
+              }
             });
           });
-        
+  
+          });
+        });
+    }).catch(error=>{
+          console.log('Error al obtener coordenadas: ', error);
       });
-    });
-    })) {}
   }
 
+  private cargarMapa(_lat:number, _lng:number){
+    //creo el mapa y configuro la posicion inicial con mi posicion actual
+    this.map = new google.maps.Map(this.mapaHTML.nativeElement, {
+      center: {lat: _lat, lng: _lng},
+      zoom: 13
+    });
 
-  private cargarMapa(_lat, _lng){
-    //configuración inicial del mapa
-    // documentación: https://github.com/ionic-team/ionic-native-google-maps/blob/master/documents/README.md
-    const mapOptios:GoogleMapOptions = {
-      mapType: GoogleMapsMapTypeId.ROADMAP,
-      camera: {
-        target:{
-          lat: _lat,
-          lng: _lng
-        },
-        zoom: 18,
-        tilt: 30
-      }
-    };
-
-    //creo el mapa
-    this.map = GoogleMaps.create('mapa', mapOptios);
-
-    let markerOpts: MarkerOptions = {
-      icon: {
-        url: '../assets/icon/marker_usuario.jpg',
-        size:{
-          width: 32,
-          height: 24
-        }
-      },
+    let marker = new google.maps.Marker({
+      position: {lat: _lat, lng: _lng},
+      map:this.map,
       title: 'Mi Ubicación',
-      position: {lat: _lat, lng:_lng},
-      animation: GoogleMapsAnimation.DROP
-    }
-    this.map.addMarker(markerOpts);
+      animation: google.maps.Animation.DROP,
+    });
  
   }
 
-
-  private trazarRuta(lat, long, miLat, miLng) {
-
-    const promise = new Promise((resolve, reject) => {
-        let miPos:ILatLng={
-      lat:miLat,
-      lng:miLng,
-    }
-    let posMarkerClicked:ILatLng={
-      lat:lat,
-      lng:long
-    }
-    let lineOptions: PolylineOptions = {
-        points: [miPos, posMarkerClicked],
-        visible: true,
-        color: '#FF8100',
-        width: 4,
-        clickable: true,
-    };
-
-      this.map.addPolyline(lineOptions).then((polyline:Polyline)=>{
-        console.info(polyline);
-        //retorna la distancia en metros
-        let _distancia = Spherical.computeDistanceBetween(miPos, posMarkerClicked);
-        //redondeo
-        _distancia = Math.round(_distancia);
-        if (_distancia >= 1000) {
-          //convierto a kms
-           let km:number = Math.floor(_distancia / 1000);
-           this.distancia = km + 'Kms.';
-        }else{
-            this.distancia = _distancia + 'Mts.';
-        }
-      });
-    });
-  
-    
-  }
 
 }
