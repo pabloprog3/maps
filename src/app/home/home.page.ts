@@ -20,6 +20,7 @@ import { GoogleMap,
 import { Geolocation } from "@ionic-native/geolocation/ngx";
 import { MapServiceService } from './servicios/map-service.service';
 import { Platform } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 declare var google:any;
 
@@ -38,7 +39,8 @@ export class HomePage implements OnInit {
   //public mapa:any;
   
 
-  constructor(private geo:Geolocation, private servicioMapa: MapServiceService
+  constructor(private geo:Geolocation, private servicioMapa: MapServiceService,
+              private router:Router
   ) {
     this.distancia = '0';
   }
@@ -117,6 +119,10 @@ export class HomePage implements OnInit {
       animation: google.maps.Animation.DROP,
     });
  
+  }
+
+  goToPush(){
+    this.router.navigateByUrl('push');
   }
 
 
