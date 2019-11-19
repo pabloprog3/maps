@@ -18,6 +18,8 @@ import { AngularFireDatabaseModule } from "angularfire2/database";
 
 import { MapServiceService } from "./home/servicios/map-service.service";
 
+import { OneSignal } from "@ionic-native/onesignal/ngx";
+
 
 @NgModule({
   declarations: [AppComponent],
@@ -32,6 +34,7 @@ import { MapServiceService } from "./home/servicios/map-service.service";
     Geolocation,
     GoogleMaps,
     MapServiceService,
+    OneSignal,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent]
