@@ -22,6 +22,8 @@ import { MapServiceService } from './servicios/map-service.service';
 import { Platform } from '@ionic/angular';
 import { Router } from '@angular/router';
 
+import { AngularFireAuth } from "angularfire2/auth";
+
 declare var google:any;
 
 @Component({
@@ -37,12 +39,24 @@ export class HomePage implements OnInit {
   private distancia:string;
   public mapElement: ElementRef = this.mapaHTML;
   //public mapa:any;
+  public email:string;
+  public passw:string;
   
 
   constructor(private geo:Geolocation, private servicioMapa: MapServiceService,
-              private router:Router
+              private router:Router, private auth:AngularFireAuth
   ) {
     this.distancia = '0';
+    this.email = '';
+    this.passw = '';
+  }
+
+  private registrarNuevoUsuario(){
+    this.auth.auth.createUserWithEmailAndPassword(this.email, this.passw).then(credenciales=>{
+      console.log(credenciales);
+    }).catch(error=>{
+      console.log(error);
+    });
   }
 
   ngAfterViewInit(): void {
