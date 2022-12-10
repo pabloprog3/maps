@@ -32,7 +32,7 @@
     "@ionic/angular": "^4.7.1",
     "angularfire2": "^5.2.1",
     "cordova-android": "^7.0.0",
-    "cordova-browser": "5.0.4",
+    "cordova-browser": "6.0.0",
     "cordova-plugin-device": "^2.0.2",
     "cordova-plugin-firebasex": "^6.1.0",
     "cordova-plugin-geolocation": "^4.0.2",
